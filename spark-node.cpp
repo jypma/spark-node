@@ -58,6 +58,8 @@ static void forwardBuffer() {
     }
     Serial.println("");
 #else
+    Serial.write(buf->len);
+    Serial.write(1); // type=FS20
     for (byte i = 0; i < buf->len; i++) {
       Serial.write(buf->data[i]);
     }
@@ -74,7 +76,11 @@ ISR(TIMER2_OVF_vect) {
 
 void setup () {
     Serial.begin(57600);
+#ifdef DEBUG
     Serial.println("recv868 init.");
+#endif
+    rf12_initialize(1, RF12_868MHZ, 5);
+
     recvA.len = 0;
     recvB.len = 0;
     recvA.done = 0;
@@ -103,4 +109,24 @@ void setup () {
 
 void loop() {
     forwardBuffer();
+
+    if (rf12_recvDone()) {
+    	byte ok = (rf12_crc == 0);
+#ifdef DEBUG
+        Serial.print("RF12 (");
+        Serial.print(ok);
+        Serial.print("): ");
+        for (byte i = 0; i < rf12_len; ++i)
+            Serial.print(rf12_data[i]);
+        Serial.println();
+#else
+        if (ok) {
+            Serial.write(rf12_len);
+            Serial.write(2); // type=RF12
+            for (byte i = 0; i < rf12_len; i++) {
+              Serial.write(rf12_data[i]);
+            }
+        }
+#endif
+    }
 }
