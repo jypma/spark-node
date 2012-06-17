@@ -253,11 +253,11 @@ void setup () {
 
     writeAck(201);
     writeDebug("Ready");
-
+/*
 	rf12_initialize(0, RF12_868MHZ);
 	fs20cmd(27, 27, 0, 18);
     restart_rf12();
-
+*/
 }
 
 void loop() {
