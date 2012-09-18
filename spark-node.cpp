@@ -25,8 +25,9 @@ struct SendBuffer {
   byte data[BUFSIZE];
   byte pos;
   byte length() {
-	  return data[1] + 2;
+	  return data[1];
   }
+  byte *content() { return data + 2; }
 };
 
 ReceiveBuffer recvA, recvB;
@@ -188,27 +189,32 @@ static void sendBuffer() {
 	if (send.data[0] == TYPE_OOK) { // OOK pulses in 4ms steps
 		ookReceive = false;
 		rf12_initialize(0, RF12_868MHZ);
-		byte max = send.length() - 1;
+		byte max = send.length() + 1;
 		for (byte p = 2; p < max; p += 2) {
 			ookPulse(((int)send.data[p]) * 4, ((int)send.data[p+1]) * 4);
 		}
 
-		writeAck(12);
 		//writeDebug(send.data, send.length());
 	    restart_rf12();
 		ookReceive = true;
-		writeAck(201);
+		writeAck(20);
 	} else if (send.data[0] == TYPE_FS20) { // Direct FS20, 4 bytes
-		if (send.length() == 6) {
+		if (send.length() == 4) {
 			ookReceive = false;
 			rf12_initialize(0, RF12_868MHZ);
 			fs20cmd(send.data[2], send.data[3], send.data[4], send.data[5]);
 		    restart_rf12();
 			ookReceive = true;
 		}
-		writeAck(send.length());
+		writeAck(20);
+	} else if (send.data[0] == TYPE_RF12) {
+		while (!rf12_canSend())
+		  rf12_recvDone();
+		rf12_sendStart(0, send.content(), send.length());
+		rf12_sendWait(1);
+		writeAck(20);
 	} else {
-		writeAck(13);
+		writeAck(40);
 	}
 	send.pos = 0;
 }
@@ -217,7 +223,7 @@ static void handleInput (byte b) {
 	//writeAck(b);
 	send.data[send.pos] = b;
 	send.pos++;
-	if ((send.pos > 1) && (send.pos >= send.length())) {
+	if ((send.pos > 1) && (send.pos >= (send.length() + 2))) {
 		sendBuffer();
 	}
 }
