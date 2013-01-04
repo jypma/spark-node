@@ -1,5 +1,4 @@
 // Do not remove the include below
-#include "spark-node.h"
 #include <JeeLib.h>
 #include <util/parity.h>
 
@@ -292,4 +291,14 @@ void loop() {
         }
 #endif
     }
+}
+
+int main(void) {
+
+  init();
+  setup();
+
+  while(true) {
+    loop();
+  }
 }
