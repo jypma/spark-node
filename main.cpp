@@ -3,7 +3,7 @@
 #include <util/parity.h>
 
 //#define DEBUG
-#define PIN_RECV_868   14
+#define PIN_RECV_868   A0
 #define DEBUG_LED      13  // std Arduino led is also red status led
 
 #define BUFSIZE       256
